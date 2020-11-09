@@ -1,5 +1,9 @@
 from typing import Sequence
 import numpy as np
+import itertools
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
 import z3
 
 class FeatureModel:
@@ -131,9 +135,56 @@ class TWiseSampler(Sampler):
     def __init__(self, fm):
         Sampler.__init__(self, fm)
         
-    def sample(self, fm):
-        pass # TODO implement here
+    def sample(self, size: int,  t: int = 2):
+        #n_options = len(self.fm.features)
+        features_dict = self.fm.feature_dict
     
+        clauses, literals = FeatureModel.convert_dimacs_to_bool_model(self.fm.clauses, features_dict)
+        clauses = z3.And(clauses)
+    
+        solver = z3.Solver()
+    
+        # add esxisting constraints to solver
+        solver.add(clauses)
+        
+        
+        solutions = []
+        print(self.fm.features)
+        for i, j in itertools.combinations(literals, 2):
+            print(i, j)
+        for i in range(size):
+
+            if solver.check() == z3.sat:
+                solution = solver.model()
+                #config = {x: (bool(solution[x]) if np.isna(solution[x] else False) for x in }
+                config = {feature:False for feature in self.fm.features}
+
+                #print(interpreted)
+                for fname in solution.decls():
+                    config[fname.name()] = bool(solution[fname])
+                    
+                solutions.append(config.values())
+                
+                constraint = []
+                for feature in literals:
+
+                    
+                    if solution[literals[feature]] == True:
+                        constraint.append(literals[feature])
+                    else:
+                        constraint.append(z3.Not(literals[feature]))
+
+                sol = z3.Not(z3.And(constraint))
+                solver.add(sol)
+                
+            else:
+                # TODO raise exception
+                break
+                
+                
+        solutions = pd.DataFrame(solutions, columns=self.fm.features)
+        return solutions
+            
 class DistanceSampler(Sampler):
     
     def __init__(self, fm):
@@ -143,7 +194,7 @@ class DistanceSampler(Sampler):
         n_options = len(self.fm.features)
         origin = z3.BitVecVal("0" * n_options, n_options)
     
-        clauses, target = FeatureModel.convert_dimacs_to_bit_model(Distanceself.fm.clauses, n_options)
+        clauses, target = FeatureModel.convert_dimacs_to_bit_model(self.fm.clauses, n_options)
         clauses = z3.And(clauses)
     
         solver = z3.Solver()
@@ -154,7 +205,7 @@ class DistanceSampler(Sampler):
         # set of existing solutions
         solutions = []
         for i in range(size):
-
+            print(i)
             while True:
                 # sample a random distance
                 distance = np.random.randint(0, n_options)
@@ -174,12 +225,15 @@ class DistanceSampler(Sampler):
     
                     # add current solution to set of solutions
                     solutions.append(solution)
-    
+                    
+                    
                     break
     
         solutions = [int_to_config(solution.as_long(), n_options) for solution in solutions]
         return np.vstack(solutions)#.vstack()
     
+    
+
 def config_to_int(config: np.ndarray) -> int:
     '''
     :param config:
@@ -208,7 +262,7 @@ def hamming(V1, V2, target):
 
 a = FeatureModel.create("/home/stefan/Desktop/SWTP/model.dimacs")
 
-sam = DistanceSampler(a)
-a = sam.sample(20)
-
+sam = TWiseSampler(a)
+a = sam.sample(100, t=3)
+plt.pcolormesh(a)
 print(a)
