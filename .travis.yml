@@ -9,10 +9,6 @@ cache: pip
 python:
     - "3.8"
 
-matrix:
-    allow_failures:
-        - python: "nightly"
-
 install:
     - pip install requirements.txt
 
