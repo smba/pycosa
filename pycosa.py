@@ -20,7 +20,7 @@ class FeatureModel:
         fm.clauses = clauses
         fm.features = list(feature_dict.values())
         fm.feature_dict = feature_dict
-        print(fm.features)
+
         return fm
         
     @staticmethod
@@ -136,8 +136,10 @@ class TWiseSampler(Sampler):
     def __init__(self, fm):
         Sampler.__init__(self, fm)
         
-    def sample(self, size: int,  t: int = 2):
-        #n_options = len(self.fm.features)
+    def sample(self, size: int,  t: int = 2, lower_order=False):
+
+        assert t >= 1 
+
         features_dict = self.fm.feature_dict
     
         clauses, literals = FeatureModel.convert_dimacs_to_bool_model(self.fm.clauses, features_dict)
@@ -151,7 +153,16 @@ class TWiseSampler(Sampler):
         
         solutions = []
 
-        for feature_combination in itertools.combinations(literals, t):
+        if lower_order:
+            combinations = []
+            for order in range(1, t):
+                t_combinations = list( itertools.combinations(literals, order) )
+                combinations += t_combinations
+
+        else:
+            combinations = list( itertools.combinations(literals, t) )
+
+        for feature_combination in combinations:
 
             config = {feature:False for feature in self.fm.features}
 
@@ -197,7 +208,9 @@ class TWiseSampler(Sampler):
         return solutions
             
    
-        """for i in range(size):
+        """
+        Code for random sampling witthout diversity promotion
+        for i in range(size):
 
             if solver.check() == z3.sat:
                 solution = solver.model()
@@ -249,11 +262,11 @@ class DistanceSampler(Sampler):
         # set of existing solutions
         solutions = []
         for i in range(size):
-            print(i)
+
             while True:
                 # sample a random distance
                 distance = np.random.randint(0, n_options)
-                solver.add(hamming(origin, target, 1) == distance)
+                solver.add(DistanceSampler.hamming(origin, target, 1) == distance)
     
                 if solver.check() == z3.unsat:
                     # remove distance based constraint
@@ -273,40 +286,43 @@ class DistanceSampler(Sampler):
                     
                     break
     
-        solutions = [int_to_config(solution.as_long(), n_options) for solution in solutions]
+        solutions = [DistanceSampler.int_to_config(solution.as_long(), n_options) for solution in solutions]
         return np.vstack(solutions)#.vstack()
     
     
-
-def config_to_int(config: np.ndarray) -> int:
-    '''
-    :param config:
-    :return:
-    '''
-    pass
-
-def int_to_config(i: int, n_options: int) -> np.ndarray:
-    '''
-    :param i:
-    :param n_options:
-    :return:
-    '''
-
-    offset = n_options - int(np.ceil(np.log2(i)))
-    binary_string = "0" * offset + str(bin(i))[2:]
-    assert(len(binary_string) == n_options)
-
-    binary = np.array([int(bit) for bit in binary_string])
-    return binary
-
-def hamming(V1, V2, target):
-    h = V1 ^ V2
-    s = max(target.bit_length(), V1.size().bit_length())
-    return z3.Sum([z3.ZeroExt(s, z3.Extract(i, i, h)) for i in range(V1.size())])
-
+    @staticmethod
+    def config_to_int(config: np.ndarray) -> int:
+        '''
+        :param config:
+        :return:
+        '''
+        pass
+    
+    @staticmethod
+    def int_to_config(i: int, n_options: int) -> np.ndarray:
+        '''
+        :param i:
+        :param n_options:
+        :return:
+        '''
+    
+        offset = n_options - int(np.ceil(np.log2(i)))
+        binary_string = "0" * offset + str(bin(i))[2:]
+        assert(len(binary_string) == n_options)
+    
+        binary = np.array([int(bit) for bit in binary_string])
+        return binary
+    
+    @staticmethod
+    def hamming(V1, V2, target):
+        h = V1 ^ V2
+        s = max(target.bit_length(), V1.size().bit_length())
+        return z3.Sum([z3.ZeroExt(s, z3.Extract(i, i, h)) for i in range(V1.size())])
+    
 a = FeatureModel.create("/home/stefan/Desktop/SWTP/model.dimacs")
 
 sam = TWiseSampler(a)
-a = sam.sample(100, t=1)
+a = sam.sample(100, t=3, lower_order=True)
 plt.pcolormesh(a)
+plt.show()
 print(a)
