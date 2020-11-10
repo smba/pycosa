@@ -2,6 +2,7 @@ from typing import Sequence
 import numpy as np
 import itertools
 import seaborn as sns
+import warnings
 import matplotlib.pyplot as plt
 import pandas as pd
 import z3
@@ -149,10 +150,54 @@ class TWiseSampler(Sampler):
         
         
         solutions = []
-        print(self.fm.features)
-        for i, j in itertools.combinations(literals, 2):
-            print(i, j)
-        for i in range(size):
+
+        for feature_combination in itertools.combinations(literals, t):
+
+            config = {feature:False for feature in self.fm.features}
+
+            
+            # create solver constraint based on combination
+            twise_constraint = z3.And( [literals[feature] for feature in feature_combination] )
+            
+            # add constraint to solver instance
+            solver.add(twise_constraint)
+            
+            # if model is satisfiable
+            if solver.check() == z3.sat:
+                
+                solution = solver.model()
+                
+                # construct configuration 
+                for fname in solution.decls():
+                    config[fname.name()] = bool(solution[fname])
+                    
+                solutions.append(config.values())
+                
+                # remove t-wise constraint from model
+                constraints = solver.assertions()
+                solver.reset()
+                solver.add(constraints[:-1])
+                
+                # add found solution as model constraint
+                constraint = []
+                for feature in literals:
+                    if solution[literals[feature]] == True:
+                        constraint.append(literals[feature])
+                    else:
+                        constraint.append(z3.Not(literals[feature]))
+
+                sol = z3.Not(z3.And(constraint))
+                solver.add(sol)
+            
+            else:
+                pass # maybe warn or raise exception?
+            
+        # convert lis of solutions to DataFrame
+        solutions = pd.DataFrame(solutions, columns=self.fm.features)
+        return solutions
+            
+   
+        """for i in range(size):
 
             if solver.check() == z3.sat:
                 solution = solver.model()
@@ -167,8 +212,6 @@ class TWiseSampler(Sampler):
                 
                 constraint = []
                 for feature in literals:
-
-                    
                     if solution[literals[feature]] == True:
                         constraint.append(literals[feature])
                     else:
@@ -184,6 +227,7 @@ class TWiseSampler(Sampler):
                 
         solutions = pd.DataFrame(solutions, columns=self.fm.features)
         return solutions
+        """
             
 class DistanceSampler(Sampler):
     
@@ -263,6 +307,6 @@ def hamming(V1, V2, target):
 a = FeatureModel.create("/home/stefan/Desktop/SWTP/model.dimacs")
 
 sam = TWiseSampler(a)
-a = sam.sample(100, t=3)
+a = sam.sample(100, t=1)
 plt.pcolormesh(a)
 print(a)
