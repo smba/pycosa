@@ -90,7 +90,7 @@ class FeatureModel:
         for clause in dimacs:
             c = []
             for opt in clause:
-                if opt >= 0:                    # Feature opt is selected
+                if opt >= 0:                    # Feature opt is selectedmaximize
                     c.append(literals[opt])
                 else:                           # Feature opt is not selected
                     negated = z3.Not(literals[abs(opt)])
@@ -136,7 +136,7 @@ class TWiseSampler(Sampler):
     def __init__(self, fm):
         Sampler.__init__(self, fm)
         
-    def sample(self, size: int,  t: int = 2, lower_order=False):
+    def sample(self, t: int = 2, lower_order=False):
 
         assert t >= 1 
 
@@ -145,17 +145,12 @@ class TWiseSampler(Sampler):
         clauses, literals = FeatureModel.convert_dimacs_to_bool_model(self.fm.clauses, features_dict)
         clauses = z3.And(clauses)
     
-        solver = z3.Solver()
-    
-        # add esxisting constraints to solver
-        solver.add(clauses)
-        
-        
         solutions = []
+        solutions_constraints = []
 
         if lower_order:
             combinations = []
-            for order in range(1, t):
+            for order in range(t + 1):
                 t_combinations = list( itertools.combinations(literals, order) )
                 combinations += t_combinations
 
@@ -166,6 +161,10 @@ class TWiseSampler(Sampler):
 
             config = {feature:False for feature in self.fm.features}
 
+            solver = z3.Solver()
+    
+            # add existing constraints to solver
+            solver.add(clauses)
             
             # create solver constraint based on combination
             twise_constraint = z3.And( [literals[feature] for feature in feature_combination] )
@@ -173,21 +172,22 @@ class TWiseSampler(Sampler):
             # add constraint to solver instance
             solver.add(twise_constraint)
             
+            solver.add(solutions_constraints)
+            
+            
+            
             # if model is satisfiable
             if solver.check() == z3.sat:
                 
                 solution = solver.model()
-                
+                count = 0
                 # construct configuration 
                 for fname in solution.decls():
                     config[fname.name()] = bool(solution[fname])
-                    
+       
                 solutions.append(config.values())
-                
-                # remove t-wise constraint from model
-                constraints = solver.assertions()
-                solver.reset()
-                solver.add(constraints[:-1])
+                                
+                #solver.add(constraints[:-1])                
                 
                 # add found solution as model constraint
                 constraint = []
@@ -195,16 +195,19 @@ class TWiseSampler(Sampler):
                     if solution[literals[feature]] == True:
                         constraint.append(literals[feature])
                     else:
-                        constraint.append(z3.Not(literals[feature]))
+                        constraint.append(z3.Not(literals[feature]))#
 
                 sol = z3.Not(z3.And(constraint))
-                solver.add(sol)
-            
+                solutions_constraints.append(sol)
+
             else:
                 pass # maybe warn or raise exception?
             
         # convert lis of solutions to DataFrame
+        
         solutions = pd.DataFrame(solutions, columns=self.fm.features)
+
+        
         return solutions
             
    
@@ -283,7 +286,6 @@ class DistanceSampler(Sampler):
                     # add current solution to set of solutions
                     solutions.append(solution)
                     
-                    
                     break
     
         solutions = [DistanceSampler.int_to_config(solution.as_long(), n_options) for solution in solutions]
@@ -319,10 +321,9 @@ class DistanceSampler(Sampler):
         s = max(target.bit_length(), V1.size().bit_length())
         return z3.Sum([z3.ZeroExt(s, z3.Extract(i, i, h)) for i in range(V1.size())])
     
-a = FeatureModel.create("/home/stefan/Desktop/SWTP/model.dimacs")
-
-sam = TWiseSampler(a)
-a = sam.sample(100, t=3, lower_order=True)
-plt.pcolormesh(a)
-plt.show()
-print(a)
+#a = FeatureModel.create("/home/stefan/Desktop/SWTP/model.dimacs")##
+#
+#sam = TWiseSampler(a)
+#a = sam.sample(t=3, lower_order=True)#
+#
+#print(a.columns)
