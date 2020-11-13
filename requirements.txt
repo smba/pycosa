@@ -2,3 +2,4 @@ z3-solver
 numpy
 pandas
 matplotlib
+seaborn
