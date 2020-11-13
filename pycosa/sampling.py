@@ -19,7 +19,8 @@ class Sampler:
 
 class CoverageSampler:
     '''
-    classdocs
+    
+    
     '''
     
     def __init__(self, fm):
@@ -28,7 +29,7 @@ class CoverageSampler:
         '''
         self.fm = fm
         
-    def sample(self, t: int):
+    def sample(self, t: int, negwise: bool = False):
         n_options = len(self.fm.feature_dict)
   
         clauses = self.fm.clauses
@@ -42,14 +43,25 @@ class CoverageSampler:
             
             # assertions
             optimizer.add(clauses)
+            for solution in solutions:
+                optimizer.add(solution != target)
             
             for opt in interaction:
                 opt = opt.item()
-                constraint = z3.Extract(opt, opt, target) == 1
+                
+                if not negwise:
+                    constraint = z3.Extract(opt, opt, target) == 1
+                else:
+                    constraint = z3.Extract(opt, opt, target) == 0
+                    
                 optimizer.add(constraint)
             
             func = z3.Sum([z3.ZeroExt(n_options, z3.Extract(i, i, target)) for i in range(n_options)])
-            optimizer.minimize(func)
+            
+            if not negwise:
+                optimizer.minimize(func)
+            else:
+                optimizer.maximize(func)
             
             if optimizer.check() == z3.sat:
                 solution = optimizer.model()[target]
@@ -119,7 +131,8 @@ class DistanceSampler:
 
 a = FeatureModel("fm", "/home/stefan/model.dimacs")
 b = CoverageSampler(a)
-sample = b.sample(1)
-import matplotlib.pyplot as plt
+sample = b.sample(2)
+print(sample)
+import 
 plt.pcolormesh(sample)
 plt.show()
