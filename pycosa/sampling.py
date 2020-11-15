@@ -129,10 +129,10 @@ class DistanceSampler:
         return z3.Sum([z3.ZeroExt(s, z3.Extract(i, i, h)) for i in range(V1.size())])
 
 
-a = FeatureModel("fm", "/home/stefan/eclipse-workspace/density-converter-model/model.dimacs")
+"""a = FeatureModel("fm", "/home/stefan/eclipse-workspace/density-converter-model/model.dimacs")
 b = CoverageSampler(a)
 sample = b.sample(1)
 print(sample)
 import matplotlib.pyplot as plt
 plt.pcolormesh(sample)
-plt.show()
+plt.show()"""

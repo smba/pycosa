@@ -8,9 +8,8 @@ class FeatureModel(object):
     
     '''
 
-    def __init__(self, name: str, src: str):
+    def __init__(self, src: str):
 
-        self.name = name
         clauses, feature_dict = FeatureModel.__parse_dimacs(src)
 
         self.clauses, self.target = FeatureModel.__convert_dimacs_to_bitvec(clauses, len(feature_dict))
