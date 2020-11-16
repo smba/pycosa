@@ -28,26 +28,40 @@ class CoverageSampler:
         Constructor
         '''
         self.fm = fm
-        
+    
     def sample(self, t: int, negwise: bool = False):
         n_options = len(self.fm.feature_dict)
   
         clauses = self.fm.clauses
         target = self.fm.target
         
-        clauses = z3.And(clauses)
+        # Identify all non-mandatory features
+        opts = []
+        for opt in range(n_options):
+
+            solver = z3.Solver()
+            solver.add(clauses)
+            
+            # check, if we can set opt to zero
+            solver.add( z3.Extract(opt, opt, target) == 0 )
+            if solver.check() == z3.sat: opts.append(opt)
+            
+        logging.debug("Discarding {} mandatory options.".format(n_options- len(opts)))
+    
+        constraints = [clause for clause in clauses]
     
         solutions = []
-        for interaction in itertools.combinations(np.arange(n_options), t):
+        for interaction in itertools.combinations(opts, t):
             optimizer = z3.Optimize()
             
             # assertions
-            optimizer.add(clauses)
+            optimizer.add(constraints)
+            
             for solution in solutions:
                 optimizer.add(solution != target)
             
             for opt in interaction:
-                opt = opt.item()
+                opt = opt#.item()
                 
                 if not negwise:
                     constraint = z3.Extract(opt, opt, target) == 1
@@ -65,7 +79,7 @@ class CoverageSampler:
             
             if optimizer.check() == z3.sat:
                 solution = optimizer.model()[target]
-                optimizer.add(solution != target)
+                constraints.append(solution != target)
                 solutions.append(solution)
         
         solutions = [FeatureModel.int_to_config(solution.as_long(), n_options) for solution in solutions]
@@ -73,7 +87,6 @@ class CoverageSampler:
         solutions = pd.DataFrame(solutions, columns = list(self.fm.feature_dict.values()))
     
         return solutions
-    
     
 class DistanceSampler:
     
@@ -119,7 +132,7 @@ class DistanceSampler:
         solutions = [FeatureModel.int_to_config(solution.as_long(), n_options) for solution in solutions]
         solutions = np.vstack(solutions) == 1
         solutions = pd.DataFrame(solutions, columns = list(self.fm.feature_dict.values()))
-    
+
         return solutions
     
     @staticmethod
@@ -127,12 +140,3 @@ class DistanceSampler:
         h = V1 ^ V2
         s = max(target.bit_length(), V1.size().bit_length())
         return z3.Sum([z3.ZeroExt(s, z3.Extract(i, i, h)) for i in range(V1.size())])
-
-
-"""a = FeatureModel("fm", "/home/stefan/eclipse-workspace/density-converter-model/model.dimacs")
-b = CoverageSampler(a)
-sample = b.sample(1)
-print(sample)
-import matplotlib.pyplot as plt
-plt.pcolormesh(sample)
-plt.show()"""
