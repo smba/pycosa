@@ -46,7 +46,7 @@ class CoverageSampler:
             solver.add( z3.Extract(opt, opt, target) == 0 )
             if solver.check() == z3.sat: opts.append(opt)
             
-        logging.debug("Discarding {} mandatory options.".format(n_options- len(opts)))
+        logging.debug("Discarding {} mandatory options.".format(n_options - len(opts)))
     
         constraints = [clause for clause in clauses]
     

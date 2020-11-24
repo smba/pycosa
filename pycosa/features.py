@@ -91,9 +91,7 @@ class FeatureModel(object):
         :param n_options:
         :return:
         '''
-    
-        
-    
+
         offset = n_options - int(np.ceil(np.log2(i)))
         binary_string = "0" * offset + str(bin(i))[2:]
         assert(len(binary_string) == n_options)
