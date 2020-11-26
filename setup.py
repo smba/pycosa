@@ -5,9 +5,9 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="smba", 
+    name="pycosa", 
     version="0.0.1",
-    author="Stefan Mühlbauer",
+    author="smba",
     author_email="",
     description="configuration sampling in python",
     long_description=long_description,
