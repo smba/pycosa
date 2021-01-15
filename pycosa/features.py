@@ -2,18 +2,33 @@ from typing import Sequence
 import logging
 import z3
 import numpy as np
+import random 
 
 class FeatureModel(object):
     '''
     
     '''
 
-    def __init__(self, src: str):
+    def __init__(self, src: str, shuffle_seed: int = 0):
 
-        clauses, feature_dict = FeatureModel.__parse_dimacs(src)
-
-        self.clauses, self.target = FeatureModel.__convert_dimacs_to_bitvec(clauses, len(feature_dict))
+        self.clauses_raw, feature_dict = FeatureModel.__parse_dimacs(src)
+                
+        self.clauses, self.target = FeatureModel.__convert_dimacs_to_bitvec(self.clauses_raw, len(feature_dict))
         self.feature_dict = feature_dict
+        
+    def shuffle(self, random_seed: int = 0):
+        """
+        Re-shuffles the composition of the feature model CNF
+        """
+        # shuffle feature model clauses (used for div. promotion)
+        random.seed(random_seed)
+        clauses_ = []
+        for clause in self.clauses_raw:
+            clause_ = random.sample(clause, len(clause))
+            clauses_.append(clause_)
+        clauses = random.sample(clauses_, len(clauses_))
+            
+        self.clauses, self.target = FeatureModel.__convert_dimacs_to_bitvec(clauses, len(self.feature_dict))
         
     @staticmethod
     def __parse_dimacs(path: str) -> (Sequence[Sequence[int]], dict):

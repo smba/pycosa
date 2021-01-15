@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pycosa", 
-    version="0.0.1",
+    version="1.0",
     author="smba",
     author_email="",
     description="configuration sampling in python",
