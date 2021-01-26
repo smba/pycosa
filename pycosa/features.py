@@ -3,6 +3,8 @@ import logging
 import z3
 import numpy as np
 import random 
+from bitarray.util import int2ba
+from numpy import dtype
 
 class FeatureModel(object):
     '''
@@ -107,9 +109,8 @@ class FeatureModel(object):
         :return:
         '''
 
-        offset = n_options - int(np.ceil(np.log2(i)))
-        binary_string = "0" * offset + str(bin(i))[2:]
-        assert(len(binary_string) == n_options)
-    
-        binary = np.array([int(bit) for bit in binary_string])
+        without_offset = np.array([int(x) for x in np.binary_repr(i)])
+        offset = n_options - len(without_offset)
+        binary = np.append(np.zeros(dtype=int, shape=offset), without_offset)
+        
         return binary
