@@ -49,7 +49,11 @@ class CoverageSampler:
     def __init__(self, fm):
         self.fm = fm
     
-    def sample(self, t: int, negwise: bool = False):
+    def sample(
+            self, 
+            t: int, 
+            negwise: bool = False,
+            include_minimal: bool = False):
         '''
         
         '''
@@ -75,11 +79,14 @@ class CoverageSampler:
     
         solutions = []
         for interaction in itertools.combinations(opts, t):
+            
+            # initialize a new optimizer
             optimizer = z3.Optimize()
             
-            # assertions
+            # add feature model clauses
             optimizer.add(constraints)
             
+            # add previous solutions as constraints
             for solution in solutions:
                 optimizer.add(solution != target)
             
@@ -93,6 +100,7 @@ class CoverageSampler:
                     
                 optimizer.add(constraint)
             
+            # function that counts the number of enabled features
             func = z3.Sum([z3.ZeroExt(n_options, z3.Extract(i, i, target)) for i in range(n_options)])
             
             if not negwise:
@@ -105,6 +113,32 @@ class CoverageSampler:
                 constraints.append(solution != target)
                 solutions.append(solution)
         
+        print(len(solutions), n_options)
+        
+        # include a configuration with the minimum number of features enabled
+        if include_minimal:
+            
+            # initialize a new optimizer
+            optimizer = z3.Optimize()
+            
+            # add feature model clauses
+            optimizer.add(constraints)
+            
+            # add previous solutions as constraints
+            for solution in solutions:
+                optimizer.add(solution != target)
+                
+            # function notthat counts the number of enabled features
+            func = z3.Sum([z3.ZeroExt(n_options, z3.Extract(i, i, target)) for i in range(n_options)])
+            
+            optimizer.minimize(func)
+            
+            if optimizer.check() == z3.sat:
+                solution = optimizer.model()[target]
+                solutions.append(solution)
+            else:
+                logging.warn("Could not find a minimal solution different from previous configurations.")
+
         solutions = [FeatureModel.int_to_config(solution.as_long(), n_options) for solution in solutions]
         solutions = np.vstack(solutions) == 1
         solutions = pd.DataFrame(solutions, columns = list(self.fm.feature_dict.values()))
