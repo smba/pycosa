@@ -1,13 +1,14 @@
+import itertools
+import logging
+import random
+import warnings
+
 import z3
+
+from pycosa.features import FeatureModel
 import numpy as np
 import pandas as pd
-import random
 
-from features import FeatureModel
-
-import logging
-import warnings
-import itertools
 
 class Sampler:
     
@@ -131,6 +132,7 @@ class CoverageSampler:
             # function notthat counts the number of enabled features
             func = z3.Sum([z3.ZeroExt(n_options, z3.Extract(i, i, target)) for i in range(n_options)])
             
+            # minimize number of enabled features
             optimizer.minimize(func)
             
             if optimizer.check() == z3.sat:
