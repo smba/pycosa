@@ -21,12 +21,12 @@ setup_args = dict(
 	python_requires='>=3.6',
 )
 
-install_requires = {
+install_requires = [
 	"numpy",
 	"pandas",
 	"z3-solver",
 	"bitarray"
-}
+]
 
 if __name__ == "__main__":
 	setuptools.setup(**setup_args, install_requires=install_requires)
