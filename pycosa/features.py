@@ -6,18 +6,23 @@ import random
 from bitarray.util import int2ba
 from numpy import dtype
 
+import networkx as nx
+from pyeda.inter import expr, expr2bdd
+
 class FeatureModel(object):
-    '''
-    
-    '''
 
-    def __init__(self, src: str, shuffle_seed: int = 0):
+    def __init__(self, src: str, shuffle_seed: int = 0, mode: str = 'bitvec'):
 
-        self.clauses_raw, feature_dict = FeatureModel.__parse_dimacs(src)
+        self.mode = mode
+        self.clauses_raw, self.feature_dict = FeatureModel.__parse_dimacs(src)
                 
-        self.clauses, self.target = FeatureModel.__convert_dimacs_to_bitvec(self.clauses_raw, len(feature_dict))
-        self.feature_dict = feature_dict
-        
+        if mode == 'bitvec':
+            self.clauses, self.target = FeatureModel.__convert_dimacs_to_bitvec(self.clauses_raw, len(self.feature_dict))
+        elif mode == 'bool':
+            self.clauses = self._dimacs_to_boolean()
+        else:
+            logging.warn('Must select either Bitcevtor mode or Boolean mode')
+
     def shuffle(self, random_seed: int = 0):
         """
         Re-shuffles the composition of the feature model CNF
@@ -31,7 +36,62 @@ class FeatureModel(object):
         clauses = random.sample(clauses_, len(clauses_))
             
         self.clauses, self.target = FeatureModel.__convert_dimacs_to_bitvec(clauses, len(self.feature_dict))
-        
+
+    def _dimacs_to_boolean(self):
+        clauses = []
+        for clause in self.clauses_raw:
+            clauses.append(z3.Or([
+                z3.Bool(self.feature_dict[abs(l)]) if l > 0 else z3.Not(z3.Bool(self.feature_dict[abs(l)])) for l in clause
+            ]))
+        return z3.And(clauses)
+
+    @staticmethod
+    def _compute_partition(expression):
+        expression = expr(expression)
+        bdd = expr2bdd(expression)
+        dotrep = bdd.to_dot()
+        start = dotrep.find('{') + 2
+        end = dotrep.find('}') - 1
+        entities = dotrep[start:end].split(';')
+        # print(entities)
+        nodes = list(filter(lambda x: 'shape' in x, entities))
+        nnodes = {}
+        for node in nodes:
+            node = node.strip()
+            name = node.split(' ')[0]
+            label = node.split(' ')[1][1:-1].split(',')[0].replace('label=', '').replace('"', '')
+            nnodes[name] = label
+
+        edges = list(filter(lambda x: '--' in x, entities))
+
+        nedges = {}
+        for edge in edges:
+            edge = edge.strip()
+            fromto = tuple(edge.split(' [')[0].split(' -- '))
+            label = int(edge.split(' [')[1][6:7])
+            nedges[fromto] = label
+
+        G = nx.DiGraph()
+
+        for node in nnodes:
+            G.add_node(node)
+
+        for edge in nedges:
+            G.add_edge(edge[0], edge[1])
+
+        # start node is the node from which edges start, but to which no edge leads
+        start_nodes = set([edge[0] for edge in nedges])
+        end_nodes = set([edge[1] for edge in nedges])
+
+        start_node = list(start_nodes - end_nodes)[0]
+        end_node = list(filter(lambda x: nnodes[x] == '1', nnodes))[0]
+
+        print('partitions')
+        for path in nx.all_simple_edge_paths(G, start_node, end_node):
+            for edge in path:
+                print(nnodes[edge[0]], '=', nedges[edge])
+            print()
+
     @staticmethod
     def __parse_dimacs(path: str) -> (Sequence[Sequence[int]], dict):
         '''

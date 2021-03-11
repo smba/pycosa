@@ -2,3 +2,5 @@ z3-solver
 pandas
 numpy
 bitarray
+networkx
+pyeda

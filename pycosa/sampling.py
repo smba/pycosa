@@ -9,6 +9,8 @@ from pycosa.features import FeatureModel
 import numpy as np
 import pandas as pd
 
+import networkx as nx
+import pyeda as eda
 
 class Sampler:
     
@@ -154,7 +156,7 @@ class CoverageSampler:
     
         return solutions
     
-class DistanceSampler:
+class DistanceSampler(Sampler):
     '''
     This class implements uniform random sampling with distance constraints. 
     The main idea is that for all configurations, a random number of features 
@@ -316,3 +318,22 @@ class DiversityPromotionSampler(Sampler):
         solutions = self.sample_to_dataframe(solutions)
 
         return solutions
+
+class BBDSampler(Sampler):
+    '''
+    This class implements consistent uniform random sampling by partitioning the configuration space. The idea
+    is to construct a binary decision diagram (BDD) for an existing feature model. Each distinct path in the BDD
+    represents a partition of the confiuration space. For each path, for some, but not all configuration options values
+    are assigned, leaving the un-assigned free to select from. By sampling across such partitions, one obtains a true
+    random set of valid configurations.
+
+    The construction of a BBD is time-consuming and does not scale well for large and complex feature models, however,
+    this approach asserts randomness of the set of sampled configurations.
+
+    References:
+    Jeho Oh, Don Batory, Margaret Myers, and Norbert Siegmund. 2017. Finding near-optimal configurations
+    in product lines by random sampling. In Proceedings of the 2017 11th Joint Meeting on Foundations of
+    Software Engineering (ESEC/FSE 2017). Association for Computing Machinery, New York, NY, USA, 61–71.
+    DOI:https://doi.org/10.1145/3106237.3106273
+    '''
+

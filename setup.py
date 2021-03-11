@@ -18,14 +18,16 @@ setup_args = dict(
         	"License :: OSI Approved :: MIT License",
         	"Operating System :: OS Independent",
     	],
-	python_requires='>=3.6',
+	python_requires='>=3.5',
 )
 
 install_requires = [
 	"numpy",
 	"pandas",
 	"z3-solver",
-	"bitarray"
+	"bitarray",
+	"pyeda",
+	"networkx"
 ]
 
 if __name__ == "__main__":
