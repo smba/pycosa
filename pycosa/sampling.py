@@ -15,6 +15,15 @@ class Sampler:
     def __init__(self, fm):
         self.fm = fm
 
+    def sample_to_dataframe(self, input_sample):
+        n_options = len(self.fm.feature_dict)
+
+        solutions = [FeatureModel.int_to_config(solution.as_long(), n_options) for solution in input_sample]
+        solutions = np.vstack(solutions) == 1
+        solutions = pd.DataFrame(solutions, columns=list(self.fm.feature_dict.values()))
+
+        return solutions
+
 class CoverageSampler:
     '''
     This class implements sampling strategies with regard to main effects, such as 
@@ -141,9 +150,7 @@ class CoverageSampler:
             else:
                 logging.warn("Could not find a minimal solution different from previous configurations.")
 
-        solutions = [FeatureModel.int_to_config(solution.as_long(), n_options) for solution in solutions]
-        solutions = np.vstack(solutions) == 1
-        solutions = pd.DataFrame(solutions, columns = list(self.fm.feature_dict.values()))
+        solutions = self.sample_to_dataframe(solutions)
     
         return solutions
     
@@ -202,9 +209,7 @@ class DistanceSampler:
             unsatisfiable = (len(available_distances) == 0)
             sample_sized_reached = (len(solutions) == size)
                     
-        solutions = [FeatureModel.int_to_config(solution.as_long(), n_options) for solution in solutions]
-        solutions = np.vstack(solutions) == 1
-        solutions = pd.DataFrame(solutions, columns = list(self.fm.feature_dict.values()))
+        solutions = self.sample_to_dataframe(solutions)
 
         return solutions
     
@@ -254,9 +259,7 @@ class NaiveRandomSampler(Sampler):
             # add solution to the solutions
             solutions.append(solution)
             
-        solutions = [FeatureModel.int_to_config(solution.as_long(), n_options) for solution in solutions]
-        solutions = np.vstack(solutions) == 1
-        solutions = pd.DataFrame(solutions, columns = list(self.fm.feature_dict.values()))
+        solutions = self.sample_to_dataframe(solutions)
 
         return solutions
     
@@ -310,8 +313,6 @@ class DiversityPromotionSampler(Sampler):
             else:
                 satisfiable = False
         
-        solutions = [FeatureModel.int_to_config(solution.as_long(), n_options) for solution in solutions]
-        solutions = np.vstack(solutions) == 1
-        solutions = pd.DataFrame(solutions, columns = list(self.fm.feature_dict.values()))
+        solutions = self.sample_to_dataframe(solutions)
 
         return solutions
