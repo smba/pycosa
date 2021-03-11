@@ -12,4 +12,5 @@ install:
     - pip install -r requirements.txt
 
 script:
-    - python tests/unittests.py
+    - python tests/test_sampling.py
+    - python tests/test_features.py
