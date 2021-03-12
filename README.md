@@ -21,7 +21,8 @@ class CoverageSampler:
 ##### Solver-based Random Sampling
 ##### Sampling with Diversity Promotion
 ##### Distance-based Sampling
-##### Sampling with Binary Decision Diagrams
+##### Sampling with Binary Decision Diagrams (BDD)
+The original approach is outlined in the following paper: [_Finding near-optimal configurations in product lines by random sampling_](https://doi.org/10.1145/3106237.3106273)
 
 #### Importance Sampling
 
