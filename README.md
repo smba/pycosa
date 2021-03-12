@@ -17,6 +17,10 @@ This is a collection of sampling strategies for (binary) configuration spaces. T
 #### Random Sampling
 ##### Solver-based Random Sampling
 ##### Sampling with Diversity Promotion
+To mitigate the inehrent bias when entirely relying on a solver to draw samples, mutation of the order of literals in clauses and clauses themselves can increase the variation between obtained samples. This approach implements the SATIBEA/diversity promotion approach (see below), which is an extension to the simple solver-based random sampling. The mutation steps significantly increase the overhead when sampling.
+
+The class `pycosa.sampling.DiversityPromotionSampler` provides a method `sample` to draw a specified number of configurations.
+
 Orignal Paper: [_Combining Multi-Objective Search and Constraint Solving for Configuring Large Software Product Lines_](https://doi.org/10.1109/ICSE.2015.69)
 ##### Distance-based Sampling
 Orignal Paper: [_Distance-Based Sampling of Software Configuration Spaces_](https://doi.org/10.1109/ICSE.2015.69)
