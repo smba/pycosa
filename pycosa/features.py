@@ -46,7 +46,15 @@ class FeatureModel(object):
         return z3.And(clauses)
 
     @staticmethod
-    def _compute_partition(expression):
+    def _dimacs_to_str(dimacs, literals):
+        literal = lambda l: "~" + literals[-1 * l] if l < 0 else literals[l]# + str(l)
+        clause = lambda c: "(" + " | ".join(list(map(literal, c))) + ")"
+        cnf = " & ".join(list(map(clause, dimacs)))
+
+        return cnf
+
+    @staticmethod
+    def _compute_partition(expression, features):
         expression = expr(expression)
         bdd = expr2bdd(expression)
         dotrep = bdd.to_dot()
@@ -86,11 +94,17 @@ class FeatureModel(object):
         start_node = list(start_nodes - end_nodes)[0]
         end_node = list(filter(lambda x: nnodes[x] == '1', nnodes))[0]
 
-        print('partitions')
+        frequencies = {feature: 0 for feature in features}
+        partitions = []
+        overall_size = 0
         for path in nx.all_simple_edge_paths(G, start_node, end_node):
+            partition_size = 2**(len(features) - len(path))
+            partition = []
+            overall_size += partition_size
             for edge in path:
-                print(nnodes[edge[0]], '=', nedges[edge])
-            print()
+                partition.append('{} = {}'.format(nnodes[edge[0]], nedges[edge]))
+            partitions.append(partition)
+        return partitions
 
     @staticmethod
     def __parse_dimacs(path: str) -> (Sequence[Sequence[int]], dict):
