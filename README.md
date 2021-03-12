@@ -44,7 +44,3 @@ Orignal Paper: [_Finding near-optimal configurations in product lines by random 
 ```
 pip install git+https://github.com/smba/pycosa.git@main
 ```
-
-### Build Status
-* main [![Build Status](https://travis-ci.org/smba/pycosa.svg?branch=main)](https://travis-ci.org/smba/pycosa)
-* dev
