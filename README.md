@@ -1,9 +1,13 @@
 # pycosa [![Build Status](https://travis-ci.org/smba/pycosa.svg?branch=main)](https://travis-ci.org/smba/pycosa)
+This is a collection of sampling strategies for (binary) configuration spaces. 
 
 ## Documentation
 ### Feature Models
-#### Boolean Representation
-#### Bit Vector Representation
+#### Input Formats
+##### DIMACS
+#### Internal Representation
+##### Boolean ExpressionNegative t-wise Sampling
+##### Bit Vectors
 
 ### Sampling Strategies
 #### Main Effects Sampling
