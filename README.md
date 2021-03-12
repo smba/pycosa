@@ -8,6 +8,8 @@
 ### Sampling Strategies
 #### Main Effects Sampling
 #### Random Sampling
+##### Solver-based / Naive Sampling
+#### Importance Sampling
 
 ## Technical
 ### Install
