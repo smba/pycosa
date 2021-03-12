@@ -4,12 +4,7 @@
 
 # Install
 
-## Latest development version
-```
-pip install git+https://github.com/smba/pycosa.git@main
-```
-
-## Latest release
+## Latest version
 ```
 pip install git+https://github.com/smba/pycosa.git@main
 ```
