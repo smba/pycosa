@@ -1,4 +1,4 @@
-# pycosa 
+# pycosa [![Build Status](https://travis-ci.org/smba/pycosa.svg?branch=main)](https://travis-ci.org/smba/pycosa)
 
 ## Documentation
 ### Feature Models
@@ -16,5 +16,5 @@ pip install git+https://github.com/smba/pycosa.git@main
 ```
 
 ### Build Status
-* main
+* main [![Build Status](https://travis-ci.org/smba/pycosa.svg?branch=main)](https://travis-ci.org/smba/pycosa)
 * dev
