@@ -7,8 +7,15 @@
 
 ### Sampling Strategies
 #### Main Effects Sampling
+##### t-wise Sampling
+##### Negative t-wise Sampling
+
 #### Random Sampling
-##### Solver-based / Naive Sampling
+##### Solver-based Random Sampling
+##### Sampling with Diversity Promotion
+##### Distance-based Sampling
+##### Sampling with Binary Decision Diagrams
+
 #### Importance Sampling
 
 ## Technical
