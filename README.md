@@ -17,12 +17,12 @@ This is a collection of sampling strategies for (binary) configuration spaces. T
 #### Random Sampling
 ##### Solver-based Random Sampling
 ##### Sampling with Diversity Promotion
-The original approach is outlined in the following paper: [_Combining Multi-Objective Search and Constraint Solving for Configuring Large Software Product Lines_](https://doi.org/10.1109/ICSE.2015.69)
+Orignal Paper: [_Combining Multi-Objective Search and Constraint Solving for Configuring Large Software Product Lines_](https://doi.org/10.1109/ICSE.2015.69)
 ##### Distance-based Sampling
-The original approach is outlined in the following paper: [_Distance-Based Sampling of Software Configuration Spaces_](https://doi.org/10.1109/ICSE.2015.69)
+Orignal Paper: [_Distance-Based Sampling of Software Configuration Spaces_](https://doi.org/10.1109/ICSE.2015.69)
 
 ##### Sampling with Binary Decision Diagrams (BDD)
-The original approach is outlined in the following paper: [_Finding near-optimal configurations in product lines by random sampling_](https://doi.org/10.1145/3106237.3106273)
+Orignal Paper: [_Finding near-optimal configurations in product lines by random sampling_](https://doi.org/10.1145/3106237.3106273)
 
 #### Importance Sampling
 
