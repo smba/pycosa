@@ -6,7 +6,16 @@ language: python
 cache: pip
 
 python:
+    - "3.6"
     - "3.7"
+    - "3.8"
+    - "3.9"
+
+before_install:
+  - python --version
+  - pip install -U pip
+  - pip install -U pytest
+  - pip install codecov
 
 install:
     - pip install -r requirements.txt
@@ -14,3 +23,6 @@ install:
 script:
     - python tests/test_sampling.py
     - python tests/test_features.py
+
+after_success:
+  - codecov
