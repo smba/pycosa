@@ -42,7 +42,7 @@ This strategy is implemented in the class `pycosa.sampling.ImportanceSampler`.
 
 ## Getting Started
 ### Install
-You can install the library includin dependencies directly from this repository using `pip`:
+You can install the library including dependencies directly from this repository using `pip`:
 ```
 pip install git+https://github.com/smba/pycosa.git@main
 ```
