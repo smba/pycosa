@@ -54,7 +54,7 @@ class FeatureModel(object):
         return cnf
 
     @staticmethod
-    def _compute_partition(expression, features):
+    def _compute_partitions(expression, features):
         expression = expr(expression)
         bdd = expr2bdd(expression)
         dotrep = bdd.to_dot()
@@ -106,22 +106,18 @@ class FeatureModel(object):
             partitions.append(partition)
         return partitions
 
+    def _compute_frequencies(self):
+        '''
+        Computes the frequency of configurations with each feature or interaction enabled.
+        '''
+        pass
+
     @staticmethod
     def __parse_dimacs(path: str) -> (Sequence[Sequence[int]], dict):
         '''
         :param path:
         :return:
         '''
-    
-        dimacs = list()
-        dimacs.append(list())
-        with open(path) as mfile:
-            lines = list(mfile)
-    
-            # parse names of features from DIMACS comments (lines starting with c)
-            feature_lines = list(filter(lambda s: s.startswith("c"), lines))
-    
-            # remove comments
     
         dimacs = list()
         dimacs.append(list())

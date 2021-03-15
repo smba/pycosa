@@ -1,21 +1,22 @@
 import itertools
 import logging
 import random
-import warnings
-
 import z3
 
 from pycosa.features import FeatureModel
 import numpy as np
 import pandas as pd
 
-import networkx as nx
-import pyeda as eda
+import abc
 
-class Sampler:
+class Sampler(metaclass=abc.ABCMeta):
     
     def __init__(self, fm):
         self.fm = fm
+        
+    @abc.abstractmethod
+    def sample(self, **kwargs) -> pd.DataFrame:
+        pass
 
     def sample_to_dataframe(self, input_sample):
         n_options = len(self.fm.feature_dict)
@@ -61,14 +62,7 @@ class CoverageSampler(Sampler):
     def __init__(self, fm):
         self.fm = fm
     
-    def sample(
-            self, 
-            t: int, 
-            negwise: bool = False,
-            include_minimal: bool = False):
-        '''
-        
-        '''
+    def _find_optional_features(self):
         n_options = len(self.fm.feature_dict)
   
         clauses = self.fm.clauses
@@ -85,9 +79,49 @@ class CoverageSampler(Sampler):
             solver.add( z3.Extract(opt, opt, target) == 0 )
             if solver.check() == z3.sat: opts.append(opt)
             
-        logging.debug("Discarding {} mandatory options.".format(n_options - len(opts)))
+        return opts
     
-        constraints = [clause for clause in clauses]
+    def _find_minimal_configuration(self, solutions, target):
+        
+        # initialize a new optimizer
+        optimizer = z3.Optimize()
+            
+        # add feature model clauses
+        n_options = len(self.fm.feature_dict)
+        constraints = self.fm.clauses
+        optimizer.add(constraints)
+            
+        # add previous solutions as constraints
+        for solution in solutions:
+            optimizer.add(solution != target)
+                
+        # function not that counts the number of enabled features
+        func = z3.Sum([z3.ZeroExt(n_options, z3.Extract(i, i, target)) for i in range(n_options)])
+            
+        # minimize number of enabled features
+        optimizer.minimize(func)
+            
+        if optimizer.check() == z3.sat:
+            solution = optimizer.model()[target]
+        else:
+            logging.warn("Could not find a minimal solution different from previous configurations.")
+            solution = None
+            
+        return solution
+    
+    def sample(
+            self, 
+            t: int, 
+            negwise: bool = False,
+            include_minimal: bool = False):
+
+        opts = self._find_optional_features()
+        
+        n_options = len(self.fm.feature_dict)
+        constraints = self.fm.clauses
+        target = self.fm.target
+        
+        logging.debug("Discarding {} mandatory options.".format(n_options - len(opts)))
     
         solutions = []
         for interaction in itertools.combinations(opts, t):
@@ -103,8 +137,6 @@ class CoverageSampler(Sampler):
                 optimizer.add(solution != target)
             
             for opt in interaction:
-                opt = opt#.item()
-                
                 if not negwise:
                     constraint = z3.Extract(opt, opt, target) == 1
                 else:
@@ -127,28 +159,8 @@ class CoverageSampler(Sampler):
         
         # include a configuration with the minimum number of features enabled
         if include_minimal:
-            
-            # initialize a new optimizer
-            optimizer = z3.Optimize()
-            
-            # add feature model clauses
-            optimizer.add(constraints)
-            
-            # add previous solutions as constraints
-            for solution in solutions:
-                optimizer.add(solution != target)
-                
-            # function notthat counts the number of enabled features
-            func = z3.Sum([z3.ZeroExt(n_options, z3.Extract(i, i, target)) for i in range(n_options)])
-            
-            # minimize number of enabled features
-            optimizer.minimize(func)
-            
-            if optimizer.check() == z3.sat:
-                solution = optimizer.model()[target]
-                solutions.append(solution)
-            else:
-                logging.warn("Could not find a minimal solution different from previous configurations.")
+            minimal_config = self._find_minimal_configuration(solutions, target)
+            solutions.append(minimal_config)
 
         solutions = self.sample_to_dataframe(solutions)
     
@@ -214,13 +226,13 @@ class DistanceSampler(Sampler):
         return solutions
     
     @staticmethod
-    def __hamming(V1, V2, target):
+    def __hamming(v1, v2, target):
         '''
         Auxiliary method that implements the Hamming or Manhattan distance for bit vectors.
         '''
-        h = V1 ^ V2
-        s = max(target.bit_length(), V1.size().bit_length())
-        return z3.Sum([z3.ZeroExt(s, z3.Extract(i, i, h)) for i in range(V1.size())])
+        h = v1 ^ v2
+        s = max(target.bit_length(), v1.size().bit_length())
+        return z3.Sum([z3.ZeroExt(s, z3.Extract(i, i, h)) for i in range(v1.size())])
     
 class NaiveRandomSampler(Sampler):
     '''
@@ -236,9 +248,7 @@ class NaiveRandomSampler(Sampler):
     def __init__(self, fm: FeatureModel):
         self.fm = fm
         
-    def sample(self, sample_size: int):
-        n_options = len(self.fm.feature_dict)
-  
+    def sample(self, sample_size: int):  
         clauses = self.fm.clauses
         target = self.fm.target
         
@@ -284,7 +294,6 @@ class DiversityPromotionSampler(Sampler):
         self.fm = fm
         
     def sample(self, sample_size: int):
-        n_options = len(self.fm.feature_dict)
         solutions = []
         
         satisfiable = True
@@ -334,4 +343,22 @@ class BBDSampler(Sampler):
     Software Engineering (ESEC/FSE 2017). Association for Computing Machinery, New York, NY, USA, 61–71.
     DOI:https://doi.org/10.1145/3106237.3106273
     '''
+    
+    def sample(self, **kwargs) -> pd.DataFrame:
+        '''
+        '''
+        pass
 
+class ImportanceSampler(Sampler):
+    '''
+    This is a class that implements configuration sampling with pre-defined probabilities for each configuration 
+    option and/or interaction.
+    '''
+    
+    def sample(self, **kwargs) -> pd.DataFrame:
+        '''
+        '''
+        pass 
+    
+    
+    
