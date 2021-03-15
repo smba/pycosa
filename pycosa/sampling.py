@@ -26,7 +26,7 @@ class Sampler:
 
         return solutions
 
-class CoverageSampler:
+class CoverageSampler(Sampler):
     '''
     This class implements sampling strategies with regard to main effects, such as 
     single features' or interactions' influences. This comprises both feature-wise, t-wise
