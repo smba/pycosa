@@ -357,6 +357,9 @@ class ImportanceSampler(Sampler):
     
     def sample(self, **kwargs) -> pd.DataFrame:
         '''
+        sampleSize
+        frequencyDict
+        Term -> probability
         '''
         pass 
     
