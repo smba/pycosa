@@ -61,7 +61,7 @@ class FeatureModel(object):
         start = dotrep.find('{') + 2
         end = dotrep.find('}') - 1
         entities = dotrep[start:end].split(';')
-        # print(entities)
+
         nodes = list(filter(lambda x: 'shape' in x, entities))
         nnodes = {}
         for node in nodes:

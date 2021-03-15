@@ -125,8 +125,6 @@ class CoverageSampler:
                 constraints.append(solution != target)
                 solutions.append(solution)
         
-        print(len(solutions), n_options)
-        
         # include a configuration with the minimum number of features enabled
         if include_minimal:
             
