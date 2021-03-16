@@ -349,9 +349,9 @@ class BBDSampler(Sampler):
         '''
         pass
 
-class ImportanceSampler(Sampler):
+class DistributionSampler(Sampler):
     '''
-    This is a class that implements configuration sampling with pre-defined probabilities for each configuration 
+    This is a class that implements configuration sampling with pre-defined distribution of probabilities for each configuration 
     option and/or interaction.
     '''
     
@@ -361,7 +361,49 @@ class ImportanceSampler(Sampler):
         frequencyDict
         Term -> probability
         '''
-        pass 
-    
-    
+        assert self.fm.mode == 'bool'
+        for kwarg in ['sample_size', 'distribution']:
+            assert kwarg in kwargs, '{} not specified!'.format(kwarg)
+        
+        sample_size = kwargs['sample_size']
+        distribution = kwargs['distribution']
+        
+        # construct solver
+        clauses = self.fm.clauses
+            
+        # construct columns for features
+        columns = list(self.fm.feature_dict.values())
+        
+        configurations = []
+        constraints = []
+        
+        while len(configurations) < sample_size:
+            
+            # draw new configuration
+            new_config_dict = {column: False for column in columns}
+            for term in distribution:
+                p = distribution[term]
+                
+                if np.random.random() < p:
+                    for option in term:
+                        new_config_dict[option] = True
+            
+            new_config_bool = z3.And([
+                z3.Bool(c) if new_config_dict[c] else z3.Not(z3.Bool(c)) for c in columns
+            ])
+            
+            # validate configuration
+            solver = z3.Solver()
+            solver.add(z3.And(clauses))
+            solver.add(constraints)
+            solver.add(new_config_bool)
+            
+            if solver.check() == z3.sat:
+                constraints.append(new_config_bool)
+                configurations.append(new_config_dict)
+
+        sample = pd.DataFrame(configurations)
+        return sample
+            
+            
     
