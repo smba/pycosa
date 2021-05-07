@@ -19,7 +19,7 @@ pip install --upgrade git+https://github.com/smba/pycosa.git@main # upgrade exis
 ##### Bit Vectors
 
 ### Sampling Strategies
-#### Main Effects / Coverage Sampling
+#### 1) Main Effects / Coverage Sampling
 This class of strategies is implemented in the class `pycosa.sampling.CoverageSampler`.
 
 ##### t-wise Sampling
@@ -28,7 +28,7 @@ The main idea behind this class of strategies it to unveil the individual effect
 ##### Negative t-wise Sampling
 In opposition to t-wise sampling, the desired features / interactions are *disabled* while the maximum number of features in a configuration is enabled. This similar to t-wise sampling does not scale well to higher-order interactions. This mode can be selected via the attribute `neg = True`.
 
-#### Random Sampling
+#### 2) Random Sampling
 ##### Solver-based/Naive 'Random' Sampling
 This strategy queries configurations as solutions to the feature model. In essence, this represents a depth-first search in the solution space and, as such, the set of connfigurations is likely clustered around a partial solution path and not thus very diverse. This strategy should be mainly used for demonstration purposes, Diversity Promotion, Distance-based Sampling and BDD Sampling aim at mitigiating this pitfall and provide better, or in the latter case even true random sampling. 
 
@@ -50,6 +50,12 @@ Orignal Paper: [_Distance-Based Sampling of Software Configuration Spaces_](http
 This strategy is implemented in the class `pycosa.sampling.BBDSampler`.
 
 Orignal Paper: [_Finding near-optimal configurations in product lines by random sampling_](https://doi.org/10.1145/3106237.3106273)
+
+#### 'Quality of Sampling'
+##### Feature Balance
+Related paper using feature balance heuristic: [Cost-Efficient Sampling for Performance Prediction of Configurable Systems](https://dl.acm.org/doi/10.1109/ASE.2015.45)
+
+##### Variance Inflation Factor
 
 #### Importance Sampling
 This strategy is implemented in the class `pycosa.sampling.ImportanceSampler`.
