@@ -22,10 +22,10 @@ pip install --upgrade git+https://github.com/smba/pycosa.git@main # upgrade exis
 #### 1) Main Effects / Coverage Sampling
 This class of strategies is implemented in the class `pycosa.sampling.CoverageSampler`.
 
-##### t-wise Sampling
+##### 1a) t-wise Sampling
 The main idea behind this class of strategies it to unveil the individual effect ('main effect') of single features (t-wise; `t = 1`) or higher-order (t-wise; `t > 1`) interactions. The upper bound for the number of configurations returned by a strategy is the binomial coefficient ('n over t') as we generate a sample configuration for each possible interaction of degree t. For each of those, the relevant features are enabled while all (or at least as few as possible) are disabled to extract the effect of the enabled features. The sampling strategy is exhaustively generating all configurations, but does not scale well to higher order interactions.
 
-##### Negative t-wise Sampling
+##### 1b) Negative t-wise Sampling
 In opposition to t-wise sampling, the desired features / interactions are *disabled* while the maximum number of features in a configuration is enabled. This similar to t-wise sampling does not scale well to higher-order interactions. This mode can be selected via the attribute `neg = True`.
 
 #### 2) Random Sampling
