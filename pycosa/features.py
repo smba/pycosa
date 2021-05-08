@@ -99,10 +99,10 @@ class FeatureModel(object):
         overall_size = 0
         for path in nx.all_simple_edge_paths(G, start_node, end_node):
             partition_size = 2**(len(features) - len(path))
-            partition = []
+            partition = {}
             overall_size += partition_size
             for edge in path:
-                partition.append('{} = {}'.format(nnodes[edge[0]], nedges[edge]))
+                partition[nnodes[edge[0]]] = bool( nedges[edge] )
             partitions.append(partition)
         return partitions
 
@@ -184,3 +184,5 @@ class FeatureModel(object):
         binary = np.append(np.zeros(dtype=int, shape=offset), without_offset)
         
         return binary
+
+
