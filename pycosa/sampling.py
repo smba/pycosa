@@ -326,7 +326,7 @@ class DiversityPromotionSampler(Sampler):
 
         return solutions
 
-class BBDSampler(Sampler):
+class BDDSampler(Sampler):
     '''
     This class implements consistent uniform random sampling by partitioning the configuration space. The idea
     is to construct a binary decision diagram (BDD) for an existing feature model. Each distinct path in the BDD
@@ -343,12 +343,39 @@ class BBDSampler(Sampler):
     Software Engineering (ESEC/FSE 2017). Association for Computing Machinery, New York, NY, USA, 61–71.
     DOI:https://doi.org/10.1145/3106237.3106273
     '''
-    
-    def sample(self, **kwargs) -> pd.DataFrame:
-        '''
-        '''
-        pass
 
+    def sample(self, sample_size: int) -> pd.DataFrame:
+        '''
+        '''
+        
+        n_options = len(self.fm.feature_dict)
+        cnf_expression_str = FeatureModel._dimacs_to_str(fm.clauses_raw, fm.feature_dict)
+        
+        partitions = FeatureModel._compute_partitions(expre, fm.feature_dict)
+
+        logging.warning('This sampling strategy might take while... grab a coffee meanwhile.')
+        
+        # calculate proportional size for each partition
+        all_configs = sum([2**(n_options - len(p)) for p in partitions])
+        props = [2**(n_options - len(p)) / all_configs for p in partitions]
+        
+        samples = []
+        for i, p in enumerate(partitions):
+            free = n_options - len(p)
+            p_sample_size = int(sample_size * props[i])
+            sample = pd.DataFrame(columns=list(self.fm.feature_dict.values()), index=np.arange(p_sample_size))
+            
+            for feature in p:
+                sample[feature] = p[feature]
+            
+            open_features = set(list(self.fm.feature_dict.values())) - set(list(p.keys()))
+            
+            sample[list(open_features)] = np.random.choice([True, False], size=(p_sample_size, len(open_features)))
+            samples.append(sample)
+        
+        out_sample = pd.concat(samples)
+        return out_sample
+                
 class DistributionSampler(Sampler):
     '''
     This is a class that implements configuration sampling with pre-defined distribution of probabilities for each configuration 
@@ -404,6 +431,3 @@ class DistributionSampler(Sampler):
 
         sample = pd.DataFrame(configurations)
         return sample
-            
-            
-    
